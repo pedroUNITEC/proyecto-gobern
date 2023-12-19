@@ -1,29 +1,30 @@
 import 'bootstrap/dist/css/bootstrap.css'
 import './App.css';
 import { useState, useEffect } from 'react';
+import swal from 'sweetalert2'
+import Swal from 'sweetalert2';
 
 function App() {
 
   const [asunto, setAsunto] = useState('');
-  const [description, setDescription] = useState('');
-  const [issueType, setIssueType] = useState('Bug')
-
+  const [issueDesc, setIssueDesc] = useState('');
 
   useEffect(() => {
-    const fetchIssues = () => {
-      fetch("http://localhost:3001/fetchData",
-        {
+    const fetchIssues = async () => {
+      try {
+        const response = await fetch("http://localhost:3001/fetch-data", {
           method: 'GET',
           headers: {
             'Content-type': 'application/json; charset=UTF-8',
           },
-        })
-        .then((res) => console.log(res.json()))
-        .catch((err) => {
-          console.log(err.message);
-        }
-        );
-    }
+        });
+
+        const data = await response.json();
+        console.dir(data)
+      } catch (error) {
+        console.error(error.message);
+      }
+    };
     fetchIssues()
   }, [])
 
@@ -33,78 +34,72 @@ function App() {
   }
 
   const handleDescChange = event => {
-    setDescription(event.target.value);
+    setIssueDesc(event.target.value);
   }
 
-  const handleTypeChange = event => {
-    setIssueType(event.target.value)
-  }
 
   const UploadButton = () => {
+
     const handleSubmit = () => {
-      fetch("http://localhost:3001/submit-issue", {
-        method: 'POST',
-        body: JSON.stringify({
-          issue: {
-            subject: asunto,
-            description: description,
-            name: issueType,
-          }
-        }),
-        headers: {
-          'Content-type': 'application/json; charset=UTF-8',
-        },
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          console.log('Submitted:', data);
-        })
-        .catch((err) => {
-          console.error('Error', err.message);
+      try {
+        const response = fetch("http://localhost:3001/submit-issue", {
+          method: 'POST',
+          headers: {
+            'Content-type': 'application/json',
+          },
+          body: JSON.stringify({
+            issue: {
+              project_id: 21,
+              subject: asunto,
+              description: issueDesc,
+            }
+          })
         });
+
+        const responseData = response;
+        console.log(responseData);
+
+        Swal.fire({
+          title: 'Éxito',
+          text: 'Solicitud exitosamente enviada',
+          icon: 'success',
+          confirmButtonText: 'Okay!'
+        });
+
+      } catch (error) {
+        console.error('Fetch error:', error);
+
+        Swal.fire({
+          title: 'Error',
+          text: 'Error al enviar solicitud',
+          icon: 'error',
+          confirmButtonText: 'Okay :('
+        });
+
+      } finally {
+        setAsunto('')
+        setIssueDesc('')
+      }
     }
+
     return (
-      <button type="submit" class="upload-button btn btn-primary"
-        onClick={handleSubmit}>Reportar
+      <button type="button" className="upload-button btn btn-primary" onClick={handleSubmit}>
+        Reportar
       </button>
     )
   }
 
 
   return (
-    <div class="App">
-      <form class="form-container">
+    <div className="App">
+      <form className="form-container">
         <h2>Reportar Problema</h2>
-        <label for="radio-button-container" class="form-label">Tipo</label>
-        <div class="radio-button-container">
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="radio-type" id="bug" value="Bug"
-              onChange={handleTypeChange} />
-            <label class="form-check-label" htmlFor="bug">
-              Bug
-            </label>
-          </div>
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="radio-type" id="funcionalidad"
-              value="Feature" onChange={handleTypeChange} />
-            <label class="form-check-label" htmlFor="funcionalidad">
-              Funcionalidad
-            </label>
-          </div>
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="radio-type" id="soporte" value="Support"
-              onChange={handleTypeChange} />
-            <label class="form-check-label" htmlFor="soporte">
-              Soporte
-            </label>
-          </div>
-        </div>
-        <label for="asunto" class="form-label">Asunto</label>
-        <div class="asunto-container">
-          <input type='text' id="asunto" class="form-control" placeholder="Escriba aquí el problema"
-            onChange={handleAsuntoChange} required />
-          <textarea id="description" class="form-control" placeholder="Describa aquí su problema"
-            onChange={handleDescChange} required />
+        <label htmlFor="asunto" className="form-label">Asunto</label>
+        <div className="asunto-container">
+          <input type='text' id="asunto" className="form-control" placeholder="Escriba aquí el problema"
+            onChange={handleAsuntoChange} value={asunto} required />
+          <textarea id="description" className="form-control" placeholder="Describa aquí su problema"
+            onChange={handleDescChange} value={issueDesc} required />
         </div>
         <UploadButton />
       </form>
