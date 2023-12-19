@@ -1,0 +1,8 @@
+### POST 
+POST http://localhost:3001/submit-issue
+Content-Type: application/json
+
+{
+  "subject": "Issue title",
+  "description": "Description of the issue" 
+}
